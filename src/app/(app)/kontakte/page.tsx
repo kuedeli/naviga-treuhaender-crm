@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  ArrowRightLeft,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   type Contact,
@@ -27,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ContactDialog } from "@/components/contacts/contact-dialog";
+import { ConvertDialog } from "@/components/contacts/convert-dialog";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +53,7 @@ export default function KontaktePage() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [convertTarget, setConvertTarget] = useState<Contact | null>(null);
 
   const loadContacts = useCallback(async () => {
     const supabase = createClient();
@@ -215,6 +224,13 @@ export default function KontaktePage() {
                         >
                           <Pencil /> Bearbeiten
                         </DropdownMenuItem>
+                        {contact.deal_id === null && (
+                          <DropdownMenuItem
+                            onClick={() => setConvertTarget(contact)}
+                          >
+                            <ArrowRightLeft /> In Deal umwandeln
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={() => setDeleteTarget(contact)}
@@ -236,6 +252,15 @@ export default function KontaktePage() {
         onOpenChange={setDialogOpen}
         contact={editingContact}
         onSaved={loadContacts}
+      />
+
+      <ConvertDialog
+        open={convertTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setConvertTarget(null);
+        }}
+        contact={convertTarget}
+        onConverted={loadContacts}
       />
 
       <ConfirmDeleteDialog
