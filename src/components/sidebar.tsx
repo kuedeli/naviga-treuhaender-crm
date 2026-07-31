@@ -25,15 +25,15 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
 
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="px-5 pt-7 pb-5">
+      <div className="px-7 pt-10 pb-9">
         <Image
           src="/logo_wordmark_light.png"
           alt="Naviga"
-          width={168}
-          height={59}
+          width={160}
+          height={56}
           priority
         />
-        <div className="mt-2 text-[10px] uppercase tracking-[0.28em] text-sidebar-foreground/50">
+        <div className="mt-3 text-[10px] uppercase tracking-[0.28em] text-sidebar-foreground/50">
           Treuhänder-CRM
         </div>
       </div>

@@ -184,7 +184,7 @@ export default function DealsPage() {
                 onDragLeave={() => setDragOverStage(null)}
                 onDrop={(e) => handleDrop(stage, e)}
                 className={cn(
-                  "flex w-64 shrink-0 flex-col rounded-xl border bg-muted/40 transition-colors",
+                  "flex w-64 max-w-64 min-w-64 shrink-0 flex-col overflow-hidden rounded-xl border bg-muted/40 transition-colors",
                   dragOverStage === stage && "border-ring bg-secondary"
                 )}
               >
@@ -219,7 +219,12 @@ export default function DealsPage() {
                           setEditingDeal(deal);
                           setDialogOpen(true);
                         }}
-                        className="group cursor-grab rounded-lg border bg-card p-3.5 shadow-xs transition-shadow select-none hover:shadow-md active:cursor-grabbing"
+                        title={
+                          isClosedStage(deal.stage) && deal.closed_reason
+                            ? `Begründung: ${deal.closed_reason}`
+                            : undefined
+                        }
+                        className="group cursor-grab overflow-hidden rounded-lg border bg-card p-3.5 shadow-xs transition-shadow select-none hover:shadow-md active:cursor-grabbing"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 space-y-0.5">
@@ -280,18 +285,6 @@ export default function DealsPage() {
                           </div>
                         )}
 
-                        {isClosedStage(deal.stage) && deal.closed_reason && (
-                          <p
-                            className={cn(
-                              "mt-3 line-clamp-3 rounded-md px-2.5 py-1.5 text-xs leading-relaxed break-words",
-                              deal.stage === "closed_won"
-                                ? "bg-emerald-600/10 text-emerald-900"
-                                : "bg-red-700/10 text-red-900"
-                            )}
-                          >
-                            {deal.closed_reason}
-                          </p>
-                        )}
                       </div>
                     );
                   })}
