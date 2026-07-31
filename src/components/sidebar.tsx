@@ -25,19 +25,16 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
 
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex items-center gap-3 px-5 py-6">
+      <div className="px-5 pt-7 pb-5">
         <Image
-          src="/logo_compass.png"
+          src="/logo_wordmark_light.png"
           alt="Naviga"
-          width={40}
-          height={40}
-          className="shrink-0"
+          width={168}
+          height={59}
+          priority
         />
-        <div className="leading-tight">
-          <div className="text-lg font-semibold tracking-[0.18em]">NAVIGA</div>
-          <div className="text-[11px] uppercase tracking-[0.14em] text-sidebar-foreground/60">
-            Treuhänder-CRM
-          </div>
+        <div className="mt-2 text-[10px] uppercase tracking-[0.28em] text-sidebar-foreground/50">
+          Treuhänder-CRM
         </div>
       </div>
 

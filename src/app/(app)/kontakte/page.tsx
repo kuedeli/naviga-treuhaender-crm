@@ -145,12 +145,22 @@ export default function KontaktePage() {
       <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>E-Mail</TableHead>
-              <TableHead>Tel-Nummer</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Erfasst am</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-11 px-4 text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/60">
+                Name
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/60">
+                E-Mail
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/60">
+                Tel-Nummer
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/60">
+                Status
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/60">
+                Erfasst am
+              </TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -178,7 +188,7 @@ export default function KontaktePage() {
             ) : (
               filtered.map((contact) => (
                 <TableRow key={contact.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="px-4 py-3 font-medium">
                     {contact.first_name} {contact.last_name}
                   </TableCell>
                   <TableCell>

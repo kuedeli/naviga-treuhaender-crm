@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Trash2, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   type Contact,
@@ -188,17 +188,17 @@ export default function DealsPage() {
                   dragOverStage === stage && "border-ring bg-secondary"
                 )}
               >
-                <div className="flex items-center gap-2 px-3 py-2.5">
+                <div className="flex items-center gap-2 px-3 pt-3 pb-2.5">
                   <span
                     className={cn(
-                      "size-2 rounded-full",
+                      "size-2 shrink-0 rounded-full",
                       STAGE_DOT_CLASSES[stage]
                     )}
                   />
-                  <span className="text-sm font-semibold">
+                  <span className="truncate text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/70">
                     {DEAL_STAGE_LABELS[stage]}
                   </span>
-                  <span className="ml-auto text-xs text-muted-foreground">
+                  <span className="ml-auto rounded-full border bg-card px-2 py-px text-xs tabular-nums text-muted-foreground">
                     {stageDeals.length}
                   </span>
                 </div>
@@ -219,19 +219,26 @@ export default function DealsPage() {
                           setEditingDeal(deal);
                           setDialogOpen(true);
                         }}
-                        className="group cursor-grab rounded-lg border bg-card p-3 shadow-xs active:cursor-grabbing"
+                        className="group cursor-grab rounded-lg border bg-card p-3.5 shadow-xs transition-shadow select-none hover:shadow-md active:cursor-grabbing"
                       >
-                        <div className="flex items-start justify-between gap-1">
-                          <span className="text-sm font-medium">
-                            {deal.company_name}
-                          </span>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 space-y-0.5">
+                            <p className="text-sm leading-snug font-semibold break-words">
+                              {deal.company_name}
+                            </p>
+                            {deal.company_size && (
+                              <p className="text-xs text-muted-foreground">
+                                {deal.company_size}
+                              </p>
+                            )}
+                          </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger
                               render={
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
-                                  className="-mt-1 -mr-1 opacity-0 group-hover:opacity-100 data-popup-open:opacity-100"
+                                  className="-mt-1.5 -mr-1.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 data-popup-open:opacity-100"
                                 />
                               }
                             >
@@ -257,23 +264,31 @@ export default function DealsPage() {
                           </DropdownMenu>
                         </div>
 
-                        {deal.company_size && (
-                          <p className="text-xs text-muted-foreground">
-                            {deal.company_size}
-                          </p>
-                        )}
-
                         {dealContacts.length > 0 && (
-                          <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Users className="size-3.5 shrink-0" />
-                            {dealContacts
-                              .map((c) => `${c.first_name} ${c.last_name}`)
-                              .join(", ")}
-                          </p>
+                          <div className="mt-3 flex flex-wrap gap-1">
+                            {dealContacts.map((c) => (
+                              <span
+                                key={c.id}
+                                className="inline-flex max-w-full items-center gap-1 rounded-full bg-secondary py-0.5 pr-2.5 pl-1.5 text-[11px] font-medium text-secondary-foreground"
+                              >
+                                <UserRound className="size-3 shrink-0 opacity-60" />
+                                <span className="truncate">
+                                  {c.first_name} {c.last_name}
+                                </span>
+                              </span>
+                            ))}
+                          </div>
                         )}
 
                         {isClosedStage(deal.stage) && deal.closed_reason && (
-                          <p className="mt-2 border-t pt-2 text-xs text-muted-foreground italic">
+                          <p
+                            className={cn(
+                              "mt-3 line-clamp-3 rounded-md px-2.5 py-1.5 text-xs leading-relaxed break-words",
+                              deal.stage === "closed_won"
+                                ? "bg-emerald-600/10 text-emerald-900"
+                                : "bg-red-700/10 text-red-900"
+                            )}
+                          >
                             {deal.closed_reason}
                           </p>
                         )}
