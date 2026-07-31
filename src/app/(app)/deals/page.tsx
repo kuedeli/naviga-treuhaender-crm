@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { MoreHorizontal, Pencil, Plus, Trash2, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,6 +8,7 @@ import {
   type Contact,
   type Deal,
   type DealStage,
+  DEAL_STAGE_DOT_CLASSES,
   DEAL_STAGE_LABELS,
 } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DealDialog, isClosedStage } from "@/components/deals/deal-dialog";
+import { DealViewDialog } from "@/components/deals/deal-view-dialog";
 import { ReasonDialog } from "@/components/deals/reason-dialog";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { cn } from "@/lib/utils";
@@ -32,22 +34,14 @@ const STAGES: DealStage[] = [
   "closed_lost",
 ];
 
-const STAGE_DOT_CLASSES: Record<DealStage, string> = {
-  qualification: "bg-[#316c9c]",
-  demo: "bg-[#19345a]",
-  evaluation: "bg-[#d1a87c]",
-  negotiation: "bg-[#8a6539]",
-  verbal_commit: "bg-[#151926]",
-  closed_won: "bg-emerald-600",
-  closed_lost: "bg-red-700",
-};
-
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
+  const [viewDeal, setViewDeal] = useState<Deal | null>(null);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [dragOverStage, setDragOverStage] = useState<DealStage | null>(null);
@@ -192,7 +186,7 @@ export default function DealsPage() {
                   <span
                     className={cn(
                       "size-2 shrink-0 rounded-full",
-                      STAGE_DOT_CLASSES[stage]
+                      DEAL_STAGE_DOT_CLASSES[stage]
                     )}
                   />
                   <span className="truncate text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/70">
@@ -215,7 +209,16 @@ export default function DealsPage() {
                         onDragStart={(e) =>
                           e.dataTransfer.setData("text/plain", deal.id)
                         }
+                        onClick={() => {
+                          // Kurz warten: folgt ein zweiter Klick, gewinnt der Doppelklick
+                          if (clickTimer.current) clearTimeout(clickTimer.current);
+                          clickTimer.current = setTimeout(
+                            () => setViewDeal(deal),
+                            250
+                          );
+                        }}
                         onDoubleClick={() => {
+                          if (clickTimer.current) clearTimeout(clickTimer.current);
                           setEditingDeal(deal);
                           setDialogOpen(true);
                         }}
@@ -237,6 +240,10 @@ export default function DealsPage() {
                               </p>
                             )}
                           </div>
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            onDoubleClick={(e) => e.stopPropagation()}
+                          >
                           <DropdownMenu>
                             <DropdownMenuTrigger
                               render={
@@ -267,6 +274,7 @@ export default function DealsPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          </div>
                         </div>
 
                         {dealContacts.length > 0 && (
@@ -294,6 +302,20 @@ export default function DealsPage() {
           })}
         </div>
       )}
+
+      <DealViewDialog
+        open={viewDeal !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewDeal(null);
+        }}
+        deal={viewDeal}
+        contacts={contacts}
+        onEdit={(deal) => {
+          setViewDeal(null);
+          setEditingDeal(deal);
+          setDialogOpen(true);
+        }}
+      />
 
       <DealDialog
         open={dialogOpen}

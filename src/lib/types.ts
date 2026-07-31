@@ -20,6 +20,16 @@ export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
   kein_interesse: "Kein Interesse",
 };
 
+export const DEAL_STAGE_DOT_CLASSES: Record<DealStage, string> = {
+  qualification: "bg-[#316c9c]",
+  demo: "bg-[#19345a]",
+  evaluation: "bg-[#d1a87c]",
+  negotiation: "bg-[#8a6539]",
+  verbal_commit: "bg-[#151926]",
+  closed_won: "bg-emerald-600",
+  closed_lost: "bg-red-700",
+};
+
 export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
   qualification: "Qualification",
   demo: "Demo",
