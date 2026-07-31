@@ -248,7 +248,7 @@ export function DealDialog({
                     </Button>
                   </div>
                 ))}
-                {availableContacts.length > 0 && (
+                {availableContacts.length > 0 ? (
                   <div className="flex items-center gap-2 pt-1">
                     <Select
                       items={availableItems}
@@ -277,6 +277,12 @@ export function DealDialog({
                       <Plus /> Verknüpfen
                     </Button>
                   </div>
+                ) : (
+                  <p className="pt-1 text-xs text-muted-foreground">
+                    Kein weiterer Kontakt verfügbar — alle erfassten Kontakte
+                    sind bereits einem Deal zugeordnet. Neue Kontaktpersonen
+                    zuerst unter «Kontakte» erfassen, dann hier verknüpfen.
+                  </p>
                 )}
               </div>
             </div>
