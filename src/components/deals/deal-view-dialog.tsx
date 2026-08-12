@@ -4,8 +4,11 @@ import { Mail, Pencil, Phone } from "lucide-react";
 import {
   type Contact,
   type Deal,
+  type LossReason,
   DEAL_STAGE_DOT_CLASSES,
   DEAL_STAGE_LABELS,
+  isLostStage,
+  isWonStage,
 } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +27,7 @@ interface DealViewDialogProps {
   onOpenChange: (open: boolean) => void;
   deal: Deal | null;
   contacts: Contact[];
+  lossReasons: LossReason[];
   onEdit: (deal: Deal) => void;
 }
 
@@ -49,12 +53,14 @@ export function DealViewDialog({
   onOpenChange,
   deal,
   contacts,
+  lossReasons,
   onEdit,
 }: DealViewDialogProps) {
   if (!deal) return null;
 
   const linkedContacts = contacts.filter((c) => c.deal_id === deal.id);
-  const isClosed = deal.stage === "closed_won" || deal.stage === "closed_lost";
+  const lossReasonLabel =
+    lossReasons.find((r) => r.id === deal.loss_reason_id)?.label ?? null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,20 +94,63 @@ export function DealViewDialog({
             </Field>
           </div>
 
-          {isClosed && deal.closed_reason && (
+          {isWonStage(deal.stage) && (
+            <Field label="Gewonnen">
+              <div className="space-y-1.5">
+                {deal.closed_won_at && (
+                  <p className="text-sm font-medium text-emerald-800">
+                    am{" "}
+                    {new Date(deal.closed_won_at).toLocaleDateString("de-CH")}
+                  </p>
+                )}
+                {deal.closed_reason && (
+                  <p className="rounded-md bg-emerald-600/10 px-3 py-2 text-sm leading-relaxed break-words text-emerald-900">
+                    {deal.closed_reason}
+                  </p>
+                )}
+              </div>
+            </Field>
+          )}
+
+          {isLostStage(deal.stage) && (
             <Field
-              label={`Begründung (${deal.stage === "closed_won" ? "gewonnen" : "verloren"})`}
+              label={
+                deal.stage === "disqualifiziert"
+                  ? "Grund (disqualifiziert)"
+                  : "Grund (verloren)"
+              }
             >
-              <p
+              <div
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm leading-relaxed break-words",
-                  deal.stage === "closed_won"
-                    ? "bg-emerald-600/10 text-emerald-900"
-                    : "bg-red-700/10 text-red-900"
+                  "space-y-1 rounded-md px-3 py-2",
+                  deal.stage === "disqualifiziert"
+                    ? "bg-zinc-500/10"
+                    : "bg-red-700/10"
                 )}
               >
-                {deal.closed_reason}
-              </p>
+                <p
+                  className={cn(
+                    "text-sm font-medium",
+                    deal.stage === "disqualifiziert"
+                      ? "text-zinc-700"
+                      : "text-red-900"
+                  )}
+                >
+                  {lossReasonLabel ?? "—"}
+                </p>
+                {deal.closed_reason && (
+                  <p
+                    className={cn(
+                      "text-sm leading-relaxed break-words",
+                      deal.stage === "disqualifiziert"
+                        ? "text-zinc-600"
+                        : "text-red-900/80"
+                    )}
+                  >
+                    {deal.closed_reason}
+                  </p>
+                )}
+              </div>
             </Field>
           )}
 

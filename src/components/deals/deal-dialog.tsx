@@ -8,8 +8,13 @@ import {
   type Contact,
   type Deal,
   type DealStage,
+  type LossReason,
   DEAL_STAGE_LABELS,
+  isEndStage,
+  isLostStage,
+  isWonStage,
 } from "@/lib/types";
+import { LossReasonSelect } from "@/components/deals/loss-reason-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,16 +35,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function isClosedStage(stage: DealStage) {
-  return stage === "closed_won" || stage === "closed_lost";
-}
-
 interface DealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** null = neuen Deal erfassen, sonst bearbeiten */
   deal: Deal | null;
   contacts: Contact[];
+  lossReasons: LossReason[];
+  onReasonCreated: (reason: LossReason) => void;
   onSaved: () => void;
 }
 
@@ -48,12 +51,15 @@ export function DealDialog({
   onOpenChange,
   deal,
   contacts,
+  lossReasons,
+  onReasonCreated,
   onSaved,
 }: DealDialogProps) {
   const [companyName, setCompanyName] = useState("");
   const [companySize, setCompanySize] = useState("");
-  const [stage, setStage] = useState<DealStage>("qualification");
+  const [stage, setStage] = useState<DealStage>("termin_gesetzt");
   const [closedReason, setClosedReason] = useState("");
+  const [lossReasonId, setLossReasonId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [addContactId, setAddContactId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -62,8 +68,9 @@ export function DealDialog({
     if (open) {
       setCompanyName(deal?.company_name ?? "");
       setCompanySize(deal?.company_size ?? "");
-      setStage(deal?.stage ?? "qualification");
+      setStage(deal?.stage ?? "termin_gesetzt");
       setClosedReason(deal?.closed_reason ?? "");
+      setLossReasonId(deal?.loss_reason_id ?? null);
       setNotes(deal?.notes ?? "");
       setAddContactId(null);
     }
@@ -79,6 +86,10 @@ export function DealDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isLostStage(stage) && !lossReasonId) {
+      toast.error("Bitte einen Grund auswählen oder erfassen.");
+      return;
+    }
     setSaving(true);
 
     const supabase = createClient();
@@ -86,7 +97,12 @@ export function DealDialog({
       company_name: companyName.trim(),
       company_size: companySize.trim() || null,
       stage,
-      closed_reason: isClosedStage(stage) ? closedReason.trim() || null : null,
+      closed_reason: isEndStage(stage) ? closedReason.trim() || null : null,
+      loss_reason_id: isLostStage(stage) ? lossReasonId : null,
+      // Datum wird beim ersten Verschieben nach Closed Won gesetzt und bleibt danach stehen
+      closed_won_at: isWonStage(stage)
+        ? (deal?.closed_won_at ?? new Date().toISOString())
+        : null,
       notes: notes.trim() || null,
     };
 
@@ -190,19 +206,40 @@ export function DealDialog({
             </Select>
           </div>
 
-          {isClosedStage(stage) && (
+          {isWonStage(stage) && (
             <div className="space-y-2">
-              <Label htmlFor="closed_reason">
-                Begründung ({stage === "closed_won" ? "gewonnen" : "verloren"})
-              </Label>
+              <Label htmlFor="closed_reason">Begründung (gewonnen)</Label>
               <Textarea
                 id="closed_reason"
                 required
-                placeholder="Warum wurde der Deal so abgeschlossen?"
+                placeholder="z. B. Partnerschaft vereinbart, Start per 1.9."
                 value={closedReason}
                 onChange={(e) => setClosedReason(e.target.value)}
               />
             </div>
+          )}
+
+          {isLostStage(stage) && (
+            <>
+              <div className="space-y-2">
+                <Label>Grund</Label>
+                <LossReasonSelect
+                  reasons={lossReasons}
+                  value={lossReasonId}
+                  onChange={setLossReasonId}
+                  onReasonCreated={onReasonCreated}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="closed_reason">Erklärung (optional)</Label>
+                <Textarea
+                  id="closed_reason"
+                  placeholder="Details zum Grund …"
+                  value={closedReason}
+                  onChange={(e) => setClosedReason(e.target.value)}
+                />
+              </div>
+            </>
           )}
 
           <div className="space-y-2">

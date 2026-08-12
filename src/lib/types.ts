@@ -5,12 +5,13 @@ export type ContactStatus =
   | "kein_interesse";
 
 export type DealStage =
-  | "qualification"
-  | "demo"
-  | "evaluation"
-  | "negotiation"
-  | "verbal_commit"
+  | "termin_gesetzt"
+  | "no_show"
+  | "qualifiziert"
+  | "evaluierung"
+  | "verhandlung"
   | "closed_won"
+  | "disqualifiziert"
   | "closed_lost";
 
 export type FieldCheckStatus = "korrekt" | "unsicher" | "falsch";
@@ -35,24 +36,39 @@ export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
 };
 
 export const DEAL_STAGE_DOT_CLASSES: Record<DealStage, string> = {
-  qualification: "bg-[#316c9c]",
-  demo: "bg-[#19345a]",
-  evaluation: "bg-[#d1a87c]",
-  negotiation: "bg-[#8a6539]",
-  verbal_commit: "bg-[#151926]",
+  termin_gesetzt: "bg-[#316c9c]",
+  no_show: "bg-orange-400",
+  qualifiziert: "bg-[#19345a]",
+  evaluierung: "bg-[#d1a87c]",
+  verhandlung: "bg-[#151926]",
   closed_won: "bg-emerald-600",
+  disqualifiziert: "bg-zinc-400",
   closed_lost: "bg-red-700",
 };
 
 export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
-  qualification: "Qualification",
-  demo: "Demo",
-  evaluation: "Evaluation",
-  negotiation: "Negotiation",
-  verbal_commit: "Verbal Commit",
+  termin_gesetzt: "Termin gesetzt (Lead)",
+  no_show: "No Show",
+  qualifiziert: "Qualifiziert (Bearbeiteter Lead)",
+  evaluierung: "Evaluierung",
+  verhandlung: "Verhandlung",
   closed_won: "Closed Won",
+  disqualifiziert: "Disqualifiziert",
   closed_lost: "Closed Lost",
 };
+
+/** Endstationen, die beim Verschieben einen Dialog verlangen */
+export function isWonStage(stage: DealStage) {
+  return stage === "closed_won";
+}
+
+export function isLostStage(stage: DealStage) {
+  return stage === "disqualifiziert" || stage === "closed_lost";
+}
+
+export function isEndStage(stage: DealStage) {
+  return isWonStage(stage) || isLostStage(stage);
+}
 
 export interface Contact {
   id: string;
@@ -74,7 +90,15 @@ export interface Deal {
   company_size: string | null;
   stage: DealStage;
   closed_reason: string | null;
+  closed_won_at: string | null;
+  loss_reason_id: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface LossReason {
+  id: string;
+  label: string;
+  created_at: string;
 }

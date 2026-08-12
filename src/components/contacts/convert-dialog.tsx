@@ -92,7 +92,7 @@ export function ConvertDialog({
           <DialogTitle>In Deal umwandeln</DialogTitle>
           <DialogDescription>
             {contact
-              ? `Erstellt einen Deal in der Stage «Qualification» und verknüpft ${contact.first_name} ${contact.last_name} als Kontaktperson.`
+              ? `Erstellt einen Deal in der Stage «Termin gesetzt (Lead)» und verknüpft ${contact.first_name} ${contact.last_name} als Kontaktperson.`
               : ""}
           </DialogDescription>
         </DialogHeader>

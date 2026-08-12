@@ -8,8 +8,11 @@ import {
   type Contact,
   type Deal,
   type DealStage,
+  type LossReason,
   DEAL_STAGE_DOT_CLASSES,
   DEAL_STAGE_LABELS,
+  isEndStage,
+  isLostStage,
 } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,25 +21,53 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DealDialog, isClosedStage } from "@/components/deals/deal-dialog";
+import { DealDialog } from "@/components/deals/deal-dialog";
 import { DealViewDialog } from "@/components/deals/deal-view-dialog";
-import { ReasonDialog } from "@/components/deals/reason-dialog";
+import {
+  CloseDealDialog,
+  type ClosePayload,
+} from "@/components/deals/close-deal-dialog";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { cn } from "@/lib/utils";
 
+/** Tooltip beim Ruhen auf einer Karte in einer Endstation */
+function dealTooltip(deal: Deal, reasons: LossReason[]): string | undefined {
+  if (deal.stage === "closed_won") {
+    const date = deal.closed_won_at
+      ? new Date(deal.closed_won_at).toLocaleDateString("de-CH")
+      : null;
+    const parts = [
+      date ? `Gewonnen am ${date}` : null,
+      deal.closed_reason ? `Begründung: ${deal.closed_reason}` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join("\n") : undefined;
+  }
+  if (isLostStage(deal.stage)) {
+    const label = reasons.find((r) => r.id === deal.loss_reason_id)?.label;
+    const parts = [
+      label ? `Grund: ${label}` : null,
+      deal.closed_reason ? `Erklärung: ${deal.closed_reason}` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join("\n") : undefined;
+  }
+  return undefined;
+}
+
 const STAGES: DealStage[] = [
-  "qualification",
-  "demo",
-  "evaluation",
-  "negotiation",
-  "verbal_commit",
+  "termin_gesetzt",
+  "no_show",
+  "qualifiziert",
+  "evaluierung",
+  "verhandlung",
   "closed_won",
+  "disqualifiziert",
   "closed_lost",
 ];
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [lossReasons, setLossReasons] = useState<LossReason[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
@@ -52,19 +83,21 @@ export default function DealsPage() {
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
-    const [dealsRes, contactsRes] = await Promise.all([
+    const [dealsRes, contactsRes, reasonsRes] = await Promise.all([
       supabase
         .from("deals")
         .select("*")
         .order("created_at", { ascending: false }),
       supabase.from("contacts").select("*").order("last_name"),
+      supabase.from("loss_reasons").select("*").order("label"),
     ]);
 
-    if (dealsRes.error || contactsRes.error) {
+    if (dealsRes.error || contactsRes.error || reasonsRes.error) {
       toast.error("Deals konnten nicht geladen werden.");
     } else {
       setDeals(dealsRes.data ?? []);
       setContacts(contactsRes.data ?? []);
+      setLossReasons(reasonsRes.data ?? []);
     }
     setLoading(false);
   }, []);
@@ -73,10 +106,21 @@ export default function DealsPage() {
     loadData();
   }, [loadData]);
 
-  async function moveDeal(deal: Deal, stage: DealStage, reason: string | null) {
+  async function moveDeal(
+    deal: Deal,
+    stage: DealStage,
+    payload: ClosePayload | null
+  ) {
     const values = {
       stage,
-      closed_reason: isClosedStage(stage) ? reason : null,
+      closed_reason: isEndStage(stage) ? (payload?.closedReason ?? null) : null,
+      loss_reason_id: isLostStage(stage)
+        ? (payload?.lossReasonId ?? null)
+        : null,
+      closed_won_at:
+        stage === "closed_won"
+          ? (deal.closed_won_at ?? new Date().toISOString())
+          : null,
     };
 
     setDeals((prev) =>
@@ -108,7 +152,7 @@ export default function DealsPage() {
     const deal = deals.find((d) => d.id === dealId);
     if (!deal || deal.stage === stage) return;
 
-    if (isClosedStage(stage)) {
+    if (isEndStage(stage)) {
       setPendingMove({ deal, stage });
     } else {
       moveDeal(deal, stage, null);
@@ -222,11 +266,7 @@ export default function DealsPage() {
                           setEditingDeal(deal);
                           setDialogOpen(true);
                         }}
-                        title={
-                          isClosedStage(deal.stage) && deal.closed_reason
-                            ? `Begründung: ${deal.closed_reason}`
-                            : undefined
-                        }
+                        title={dealTooltip(deal, lossReasons)}
                         className="group cursor-grab overflow-hidden rounded-lg border bg-card p-3.5 shadow-xs transition-shadow select-none hover:shadow-md active:cursor-grabbing"
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -310,6 +350,7 @@ export default function DealsPage() {
         }}
         deal={viewDeal}
         contacts={contacts}
+        lossReasons={lossReasons}
         onEdit={(deal) => {
           setViewDeal(null);
           setEditingDeal(deal);
@@ -322,19 +363,31 @@ export default function DealsPage() {
         onOpenChange={setDialogOpen}
         deal={editingDeal}
         contacts={contacts}
+        lossReasons={lossReasons}
+        onReasonCreated={(reason) =>
+          setLossReasons((prev) =>
+            [...prev, reason].sort((a, b) => a.label.localeCompare(b.label))
+          )
+        }
         onSaved={loadData}
       />
 
-      <ReasonDialog
+      <CloseDealDialog
         open={pendingMove !== null}
         onOpenChange={(open) => {
           if (!open) setPendingMove(null);
         }}
-        won={pendingMove?.stage === "closed_won"}
+        stage={pendingMove?.stage ?? null}
         companyName={pendingMove?.deal.company_name ?? ""}
-        onConfirm={(reason) => {
+        reasons={lossReasons}
+        onReasonCreated={(reason) =>
+          setLossReasons((prev) =>
+            [...prev, reason].sort((a, b) => a.label.localeCompare(b.label))
+          )
+        }
+        onConfirm={(payload) => {
           if (pendingMove) {
-            moveDeal(pendingMove.deal, pendingMove.stage, reason);
+            moveDeal(pendingMove.deal, pendingMove.stage, payload);
             setPendingMove(null);
           }
         }}
