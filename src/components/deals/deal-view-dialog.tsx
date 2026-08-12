@@ -1,12 +1,15 @@
 "use client";
 
-import { Mail, Pencil, Phone } from "lucide-react";
+import { ExternalLink, Mail, Pencil, Phone } from "lucide-react";
 import {
   type Contact,
   type Deal,
   type LossReason,
+  BROKER_STATUS_LABELS,
   DEAL_STAGE_DOT_CLASSES,
   DEAL_STAGE_LABELS,
+  KMU_COUNT_STATUS_LABELS,
+  domainToUrl,
   isLostStage,
   isWonStage,
 } from "@/lib/types";
@@ -75,7 +78,7 @@ export function DealViewDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
             <Field label="Deal-Stage">
               <Badge variant="outline" className="gap-1.5">
                 <span
@@ -87,8 +90,44 @@ export function DealViewDialog({
                 {DEAL_STAGE_LABELS[deal.stage]}
               </Badge>
             </Field>
-            <Field label="Grösse">
-              {deal.company_size || (
+            <Field label="Domain">
+              {deal.domain ? (
+                <a
+                  href={domainToUrl(deal.domain)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[#316c9c] hover:underline"
+                >
+                  {deal.domain} <ExternalLink className="size-3" />
+                </a>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </Field>
+            <Field label="Anzahl KMU Kunden">
+              {deal.kmu_count ? (
+                <>
+                  {deal.kmu_count}{" "}
+                  <span className="text-muted-foreground">
+                    ({KMU_COUNT_STATUS_LABELS[deal.kmu_count_status]})
+                  </span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </Field>
+            <Field label="Bestehender Broker?">
+              {BROKER_STATUS_LABELS[deal.existing_broker]}
+            </Field>
+            <Field label="Nächster Schritt">
+              {deal.next_step || (
+                <span className="text-muted-foreground">—</span>
+              )}
+            </Field>
+            <Field label="Nächster Termin">
+              {deal.next_meeting ? (
+                new Date(deal.next_meeting).toLocaleDateString("de-CH")
+              ) : (
                 <span className="text-muted-foreground">—</span>
               )}
             </Field>

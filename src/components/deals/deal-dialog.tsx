@@ -5,11 +5,15 @@ import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
+  type BrokerStatus,
   type Contact,
   type Deal,
   type DealStage,
+  type KmuCountStatus,
   type LossReason,
+  BROKER_STATUS_LABELS,
   DEAL_STAGE_LABELS,
+  KMU_COUNT_STATUS_LABELS,
   isEndStage,
   isLostStage,
   isWonStage,
@@ -56,7 +60,14 @@ export function DealDialog({
   onSaved,
 }: DealDialogProps) {
   const [companyName, setCompanyName] = useState("");
-  const [companySize, setCompanySize] = useState("");
+  const [domain, setDomain] = useState("");
+  const [kmuCount, setKmuCount] = useState("");
+  const [kmuCountStatus, setKmuCountStatus] =
+    useState<KmuCountStatus>("geschaetzt");
+  const [existingBroker, setExistingBroker] =
+    useState<BrokerStatus>("unbekannt");
+  const [nextStep, setNextStep] = useState("");
+  const [nextMeeting, setNextMeeting] = useState("");
   const [stage, setStage] = useState<DealStage>("termin_gesetzt");
   const [closedReason, setClosedReason] = useState("");
   const [lossReasonId, setLossReasonId] = useState<string | null>(null);
@@ -67,7 +78,12 @@ export function DealDialog({
   useEffect(() => {
     if (open) {
       setCompanyName(deal?.company_name ?? "");
-      setCompanySize(deal?.company_size ?? "");
+      setDomain(deal?.domain ?? "");
+      setKmuCount(deal?.kmu_count ?? "");
+      setKmuCountStatus(deal?.kmu_count_status ?? "geschaetzt");
+      setExistingBroker(deal?.existing_broker ?? "unbekannt");
+      setNextStep(deal?.next_step ?? "");
+      setNextMeeting(deal?.next_meeting ?? "");
       setStage(deal?.stage ?? "termin_gesetzt");
       setClosedReason(deal?.closed_reason ?? "");
       setLossReasonId(deal?.loss_reason_id ?? null);
@@ -95,7 +111,12 @@ export function DealDialog({
     const supabase = createClient();
     const values = {
       company_name: companyName.trim(),
-      company_size: companySize.trim() || null,
+      domain: domain.trim() || null,
+      kmu_count: kmuCount.trim() || null,
+      kmu_count_status: kmuCountStatus,
+      existing_broker: existingBroker,
+      next_step: nextStep.trim() || null,
+      next_meeting: nextMeeting || null,
       stage,
       closed_reason: isEndStage(stage) ? closedReason.trim() || null : null,
       loss_reason_id: isLostStage(stage) ? lossReasonId : null,
@@ -176,14 +197,71 @@ export function DealDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="company_size">Grösse</Label>
+              <Label htmlFor="deal_domain">Domain</Label>
               <Input
-                id="company_size"
-                placeholder="z. B. 15 Mitarbeitende"
-                value={companySize}
-                onChange={(e) => setCompanySize(e.target.value)}
+                id="deal_domain"
+                placeholder="z. B. mustertreuhand.ch"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="kmu_count">Anzahl KMU Kunden</Label>
+            <div className="flex gap-2">
+              <Input
+                id="kmu_count"
+                placeholder="z. B. 25"
+                className="flex-1"
+                value={kmuCount}
+                onChange={(e) => setKmuCount(e.target.value)}
+              />
+              <Select
+                items={KMU_COUNT_STATUS_LABELS}
+                value={kmuCountStatus}
+                onValueChange={(v) => setKmuCountStatus(v as KmuCountStatus)}
+              >
+                <SelectTrigger
+                  aria-label="KMU-Anzahl-Status"
+                  className="w-32 shrink-0"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(KMU_COUNT_STATUS_LABELS).map(
+                    ([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Bestehender Broker?</Label>
+            <Select
+              items={BROKER_STATUS_LABELS}
+              value={existingBroker}
+              onValueChange={(v) => setExistingBroker(v as BrokerStatus)}
+            >
+              <SelectTrigger
+                aria-label="Bestehender Broker"
+                className="w-full"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(BROKER_STATUS_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -241,6 +319,27 @@ export function DealDialog({
               </div>
             </>
           )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="next_step">Nächster Schritt</Label>
+              <Input
+                id="next_step"
+                placeholder="z. B. Offerte nachfassen"
+                value={nextStep}
+                onChange={(e) => setNextStep(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="next_meeting">Nächster Termin</Label>
+              <Input
+                id="next_meeting"
+                type="date"
+                value={nextMeeting}
+                onChange={(e) => setNextMeeting(e.target.value)}
+              />
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="deal_notes">Notizen</Label>

@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Pencil, Plus, Trash2, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   type Contact,
@@ -11,6 +18,7 @@ import {
   type LossReason,
   DEAL_STAGE_DOT_CLASSES,
   DEAL_STAGE_LABELS,
+  KMU_COUNT_STATUS_LABELS,
   isEndStage,
   isLostStage,
 } from "@/lib/types";
@@ -274,9 +282,20 @@ export default function DealsPage() {
                             <p className="text-sm leading-snug font-semibold break-words">
                               {deal.company_name}
                             </p>
-                            {deal.company_size && (
+                            {deal.kmu_count && (
                               <p className="text-xs text-muted-foreground">
-                                {deal.company_size}
+                                {deal.kmu_count} KMU-Kunden ·{" "}
+                                {KMU_COUNT_STATUS_LABELS[
+                                  deal.kmu_count_status
+                                ].toLowerCase()}
+                              </p>
+                            )}
+                            {deal.next_meeting && !isEndStage(deal.stage) && (
+                              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CalendarDays className="size-3 shrink-0" />
+                                {new Date(
+                                  deal.next_meeting
+                                ).toLocaleDateString("de-CH")}
                               </p>
                             )}
                           </div>

@@ -32,13 +32,15 @@ export function ConvertDialog({
 }: ConvertDialogProps) {
   const router = useRouter();
   const [companyName, setCompanyName] = useState("");
-  const [companySize, setCompanySize] = useState("");
+  const [domain, setDomain] = useState("");
+  const [kmuCount, setKmuCount] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setCompanyName("");
-      setCompanySize("");
+      setDomain("");
+      setKmuCount("");
     }
   }, [open]);
 
@@ -52,7 +54,8 @@ export function ConvertDialog({
       .from("deals")
       .insert({
         company_name: companyName.trim(),
-        company_size: companySize.trim() || null,
+        domain: domain.trim() || null,
+        kmu_count: kmuCount.trim() || null,
       })
       .select()
       .single();
@@ -107,12 +110,21 @@ export function ConvertDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="convert_size">Grösse</Label>
+            <Label htmlFor="convert_domain">Domain</Label>
             <Input
-              id="convert_size"
-              placeholder="z. B. 15 Mitarbeitende"
-              value={companySize}
-              onChange={(e) => setCompanySize(e.target.value)}
+              id="convert_domain"
+              placeholder="z. B. mustertreuhand.ch"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="convert_kmu">Anzahl KMU Kunden (geschätzt)</Label>
+            <Input
+              id="convert_kmu"
+              placeholder="z. B. 25"
+              value={kmuCount}
+              onChange={(e) => setKmuCount(e.target.value)}
             />
           </div>
           <DialogFooter>

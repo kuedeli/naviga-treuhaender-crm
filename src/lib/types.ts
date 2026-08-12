@@ -84,10 +84,31 @@ export interface Contact {
   updated_at: string;
 }
 
+export type KmuCountStatus = "geschaetzt" | "bestaetigt";
+
+export const KMU_COUNT_STATUS_LABELS: Record<KmuCountStatus, string> = {
+  geschaetzt: "Geschätzt",
+  bestaetigt: "Bestätigt",
+};
+
+export type BrokerStatus = "unbekannt" | "zufrieden" | "unzufrieden" | "keiner";
+
+export const BROKER_STATUS_LABELS: Record<BrokerStatus, string> = {
+  unbekannt: "Unbekannt",
+  zufrieden: "Zufrieden",
+  unzufrieden: "Unzufrieden",
+  keiner: "Keiner",
+};
+
 export interface Deal {
   id: string;
   company_name: string;
-  company_size: string | null;
+  domain: string | null;
+  kmu_count: string | null;
+  kmu_count_status: KmuCountStatus;
+  existing_broker: BrokerStatus;
+  next_step: string | null;
+  next_meeting: string | null;
   stage: DealStage;
   closed_reason: string | null;
   closed_won_at: string | null;
@@ -95,6 +116,11 @@ export interface Deal {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** "mustertreuhand.ch" → anklickbare URL */
+export function domainToUrl(domain: string): string {
+  return domain.startsWith("http") ? domain : `https://${domain}`;
 }
 
 export interface LossReason {
