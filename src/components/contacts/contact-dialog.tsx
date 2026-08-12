@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import {
   type Contact,
   type ContactStatus,
+  type FieldCheckStatus,
   CONTACT_STATUS_LABELS,
+  FIELD_CHECK_LABELS,
 } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +47,8 @@ export function ContactDialog({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [emailStatus, setEmailStatus] = useState<FieldCheckStatus>("unsicher");
+  const [phoneStatus, setPhoneStatus] = useState<FieldCheckStatus>("unsicher");
   const [status, setStatus] = useState<ContactStatus>("neu");
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +58,8 @@ export function ContactDialog({
       setLastName(contact?.last_name ?? "");
       setEmail(contact?.email ?? "");
       setPhone(contact?.phone ?? "");
+      setEmailStatus(contact?.email_status ?? "unsicher");
+      setPhoneStatus(contact?.phone_status ?? "unsicher");
       setStatus(contact?.status ?? "neu");
     }
   }, [open, contact]);
@@ -68,6 +74,8 @@ export function ContactDialog({
       last_name: lastName.trim(),
       email: email.trim() || null,
       phone: phone.trim() || null,
+      email_status: emailStatus,
+      phone_status: phoneStatus,
       status,
     };
 
@@ -124,21 +132,69 @@ export function ContactDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="contact_email">E-Mail</Label>
-            <Input
-              id="contact_email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="contact_email"
+                type="email"
+                className="flex-1"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Select
+                items={FIELD_CHECK_LABELS}
+                value={emailStatus}
+                onValueChange={(value) =>
+                  setEmailStatus(value as FieldCheckStatus)
+                }
+              >
+                <SelectTrigger
+                  aria-label="E-Mail-Status"
+                  className="w-30 shrink-0"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FIELD_CHECK_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="contact_phone">Tel-Nummer</Label>
-            <Input
-              id="contact_phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="contact_phone"
+                type="tel"
+                className="flex-1"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              <Select
+                items={FIELD_CHECK_LABELS}
+                value={phoneStatus}
+                onValueChange={(value) =>
+                  setPhoneStatus(value as FieldCheckStatus)
+                }
+              >
+                <SelectTrigger
+                  aria-label="Telefon-Status"
+                  className="w-30 shrink-0"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FIELD_CHECK_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Status</Label>

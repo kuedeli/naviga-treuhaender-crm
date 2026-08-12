@@ -14,7 +14,10 @@ import { createClient } from "@/lib/supabase/client";
 import {
   type Contact,
   type ContactStatus,
+  type FieldCheckStatus,
   CONTACT_STATUS_LABELS,
+  FIELD_CHECK_DOT_CLASSES,
+  FIELD_CHECK_LABELS,
 } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,6 +47,36 @@ const STATUS_BADGE_CLASSES: Record<ContactStatus, string> = {
   in_deal_umgewandelt: "border-[#d1a87c]/60 bg-[#d1a87c]/20 text-[#8a6539]",
   kein_interesse: "border-border bg-muted text-muted-foreground",
 };
+
+function FieldWithCheck({
+  value,
+  check,
+  href,
+}: {
+  value: string | null;
+  check: FieldCheckStatus;
+  href?: string;
+}) {
+  if (!value) return <>—</>;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        title={FIELD_CHECK_LABELS[check]}
+        className={cn(
+          "size-2 shrink-0 rounded-full",
+          FIELD_CHECK_DOT_CLASSES[check]
+        )}
+      />
+      {href ? (
+        <a href={href} className="hover:underline">
+          {value}
+        </a>
+      ) : (
+        value
+      )}
+    </span>
+  );
+}
 
 export default function KontaktePage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -192,18 +225,20 @@ export default function KontaktePage() {
                     {contact.first_name} {contact.last_name}
                   </TableCell>
                   <TableCell>
-                    {contact.email ? (
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="hover:underline"
-                      >
-                        {contact.email}
-                      </a>
-                    ) : (
-                      "—"
-                    )}
+                    <FieldWithCheck
+                      value={contact.email}
+                      check={contact.email_status}
+                      href={
+                        contact.email ? `mailto:${contact.email}` : undefined
+                      }
+                    />
                   </TableCell>
-                  <TableCell>{contact.phone || "—"}</TableCell>
+                  <TableCell>
+                    <FieldWithCheck
+                      value={contact.phone}
+                      check={contact.phone_status}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"

@@ -13,6 +13,20 @@ export type DealStage =
   | "closed_won"
   | "closed_lost";
 
+export type FieldCheckStatus = "korrekt" | "unsicher" | "falsch";
+
+export const FIELD_CHECK_LABELS: Record<FieldCheckStatus, string> = {
+  korrekt: "Korrekt",
+  unsicher: "Unsicher",
+  falsch: "Falsch",
+};
+
+export const FIELD_CHECK_DOT_CLASSES: Record<FieldCheckStatus, string> = {
+  korrekt: "bg-emerald-500",
+  unsicher: "bg-amber-400",
+  falsch: "bg-red-500",
+};
+
 export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
   neu: "Neu",
   an_richard_uebergeben: "An Richard übergeben",
@@ -46,6 +60,8 @@ export interface Contact {
   last_name: string;
   email: string | null;
   phone: string | null;
+  email_status: FieldCheckStatus;
+  phone_status: FieldCheckStatus;
   status: ContactStatus;
   deal_id: string | null;
   created_at: string;
